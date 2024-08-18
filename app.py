@@ -3,10 +3,8 @@ import pandas as pd
 import numpy as np
 import datetime
 
-"""
-         
-# Retail Return Manager
-         
+"""         
+# Retail Return Manager        
 """
 dfArea = pd.read_csv('Areas.csv')
 dfItem = pd.read_csv('Items.csv')
@@ -19,9 +17,24 @@ dfSales['Date'] = pd.to_datetime(dfSales['Date'])
 dfSales['prediction'] = dfSales['prediction'].fillna(dfSales['Qty'])
 dfSales['prediction'] = dfSales['prediction'].round().astype(int)
 dfSales.sort_values('Date',ascending=True)
-# dfSales.set_index('Date',inplace=True)
-# dfSales.info()
 
+st.markdown("""
+            <style>
+                div[data-testid="column"] {
+                    width: fit-content !important;
+                    flex: unset;
+                }
+                div[data-testid="column"] * {
+                    width: fit-content !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+def header(url,warning):
+     if(warning):
+         st.markdown(f'<p style="background-color:#D22B2B;color:#ffffff;font-size:24px;border-radius:2%;">{url}</p>', unsafe_allow_html=True)
+     else:
+        st.markdown(f'<p style="background-color:#0066cc;color:#33ff33;font-size:24px;border-radius:2%;">{url}</p>', unsafe_allow_html=True)
+     
 optArea = st.selectbox(
     'Area',
     dfArea['0'],
@@ -39,29 +52,28 @@ optItem = st.selectbox(
 expdate = st.date_input('Exp Date',value=datetime.date.today(),min_value=datetime.date.today())
 shelf = st.number_input('Shelf Qty',min_value=0,max_value=999,value=0)
 
-dfAreaItemSales = dfSales[(dfSales['Area']==optArea) & 
+col1, col2 = st.columns(2)
+with col1:
+    btnSubmit = st.button('Submit')
+with col2:
+    btnClear = st.button('Clear')
+
+if(btnSubmit):
+    # sales_prediction
+    if(optArea!=None and optItem!=None):
+        dfAreaItemSales = dfSales[(dfSales['Area']==optArea) & 
                           (dfSales['ItemID']==optItem) & 
                           (dfSales['Set'].isin(['Train','Future'])) &
                         #   (dfSales['Date']>pd.to_datetime(datetime.date.today())) & 
                           (dfSales['Date']<pd.to_datetime(expdate))]
-sales_prediction = dfAreaItemSales[(dfSales['Date']>pd.to_datetime(datetime.date.today()))]
-dfAreaItemSales.set_index('Date',inplace=True)
-prediction_qty = sales_prediction['prediction'].sum()
-# sales_prediction
-if(dfAreaItemSales.shape[0]>0):
-    # dfAreaItemSales    
-    'Projected Sale upto Expiry : ',prediction_qty
-    if prediction_qty < shelf:
-        """
-        ## Recommended Return
-        """
-    st.line_chart(dfAreaItemSales,y=['prediction','Qty'])
-else:
-    'No Sales'
-
-
-# chart_data = pd.DataFrame(
-#      np.random.randn(20, 3),
-#      columns=['a', 'b', 'c'])
-
-# st.line_chart(chart_data)
+        sales_prediction = dfAreaItemSales[(dfSales['Date']>pd.to_datetime(datetime.date.today()))]
+        dfAreaItemSales.set_index('Date',inplace=True)
+        prediction_qty = sales_prediction['prediction'].sum()
+        
+        if(dfAreaItemSales.shape[0]>0):  
+            header('Projected Sale upto Expiry : '+str(prediction_qty),False)            
+            if prediction_qty < shelf:
+                header('Recommended Return',True) 
+            st.line_chart(dfAreaItemSales,y=['prediction','Qty'])           
+        else:
+            header('No Sales',False)
