@@ -18,6 +18,8 @@ dfSales['prediction'] = dfSales['prediction'].fillna(dfSales['Qty'])
 dfSales['prediction'] = dfSales['prediction'].round().astype(int)
 dfSales.sort_values('Date',ascending=True)
 
+dfPrediction = dfSales[(dfSales['Date']>pd.to_datetime('2024-01-01'))]
+
 st.markdown("""
             <style>
                 div[data-testid="column"] {
@@ -34,7 +36,9 @@ def header(url,warning):
          st.markdown(f'<p style="background-color:#D22B2B;color:#ffffff;font-size:24px;border-radius:2%;">{url}</p>', unsafe_allow_html=True)
      else:
         st.markdown(f'<p style="background-color:#0066cc;color:#33ff33;font-size:24px;border-radius:2%;">{url}</p>', unsafe_allow_html=True)
-     
+
+
+
 optArea = st.selectbox(
     'Area',
     dfArea['0'],
@@ -59,13 +63,18 @@ with col2:
     btnClear = st.button('Clear')
 
 if(btnSubmit):
-    # sales_prediction
+    # sales_prediction dfPrediction
     if(optArea!=None and optItem!=None):
-        dfAreaItemSales = dfSales[(dfSales['Area']==optArea) & 
-                          (dfSales['ItemID']==optItem) & 
-                          (dfSales['Set'].isin(['Train','Future'])) &
-                        #   (dfSales['Date']>pd.to_datetime(datetime.date.today())) & 
-                          (dfSales['Date']<pd.to_datetime(expdate))]
+        # dfAreaItemSales = dfSales[(dfSales['Area']==optArea) & 
+        #                   (dfSales['ItemID']==optItem) & 
+        #                 #   (dfSales['Date']>=pd.to_datetime(datetime.date.today().replace(datetime.date.today().month-5).replace(day=1))) &
+        #                   (dfSales['Set'].isin(['Train','Future'])) &
+        #                 #   (dfSales['Date']>pd.to_datetime(datetime.date.today())) & 
+        #                   (dfSales['Date']<pd.to_datetime(expdate))]
+        dfAreaItemSales = dfPrediction[(dfPrediction['Area']==optArea) & 
+                          (dfPrediction['ItemID']==optItem) & 
+                          (dfPrediction['Set'].isin(['Train','Future'])) &
+                          (dfPrediction['Date']<pd.to_datetime(expdate))]
         sales_prediction = dfAreaItemSales[(dfSales['Date']>pd.to_datetime(datetime.date.today()))]
         dfAreaItemSales.set_index('Date',inplace=True)
         prediction_qty = sales_prediction['prediction'].sum()
